@@ -94,7 +94,11 @@ c的一种常用的做法是，定义一个类型无关的宏来分配内存并�
 - 没有返回。典型做法是调用abort或exit。abort/exit可以在标准c库中找到(还有标准c++库，参见条款49)。
 
 
+#### 8.重写Operator new 和Operator delete时要遵循常规
 
+ 为什么要自己重写 operator new 和operator delete函数？
+
+- 为了效率，通用的new 操作会在为对象分配内存时，记录该对象所占用的内存空间。某些情况下，这是需要优化的
 
 ## 设计与声明
 
