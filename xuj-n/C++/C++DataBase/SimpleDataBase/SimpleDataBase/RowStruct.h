@@ -69,3 +69,10 @@ char * RowSlot(SqlTable* table, size_t rowNum)
 
 	return page + byteOffset;
 }
+
+void printRow(const Row & row)
+{
+	std::cout << row.id;
+	std::cout << row.userName;
+	std::cout << row.email << std::endl;
+}

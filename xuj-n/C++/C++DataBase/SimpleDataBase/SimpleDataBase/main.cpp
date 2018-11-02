@@ -14,16 +14,10 @@ int main(int argc, char* argv[])
 	{
 		inputStr.clear();
 		cout << "db >";
-		try
-		{
-			getline(cin, inputStr);
-		}
-		catch (...)
-		{
-			continue;
-		}
+	
+		getline(cin, inputStr);
 
-		if (inputStr[0] == '.')
+		if (!inputStr.empty() && inputStr[0] == '.')
 		{
 			switch (doMetaCommand(inputStr))
 			{

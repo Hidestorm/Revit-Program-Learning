@@ -88,7 +88,7 @@ ExecuteResult ExcuteSelect(Statement *statement, SqlTable * table)
 	for (int i = 0; i < table->numRows; i++)
 	{
 		deserializeRow(RowSlot(table, i), &row);
-		// printRow(row);
+		 printRow(row);
 	}
 	return EXECUTE_SUCCESS;
 }
