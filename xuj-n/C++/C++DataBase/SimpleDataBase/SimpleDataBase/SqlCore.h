@@ -80,6 +80,7 @@ ExecuteResult ExcuteInsert(Statement * statement, SqlTable * table)
 	Row * row2Insert = &(statement->rowToInsert);
 	serializeRow(row2Insert, RowSlot(table, table->numRows));
 	table->numRows += 1;
+	return EXECUTE_SUCCESS;
 }
 
 ExecuteResult ExcuteSelect(Statement *statement, SqlTable * table)

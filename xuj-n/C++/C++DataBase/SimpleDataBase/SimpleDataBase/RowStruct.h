@@ -61,7 +61,7 @@ char * RowSlot(SqlTable* table, size_t rowNum)
 	char *page = table->pages[pageNum];
 	if (!page)
 	{
-		page = table->pages[pageNum] = new char(PAGE_SIZE);
+		page = table->pages[pageNum] = new char[PAGE_SIZE];
 	}
 
 	size_t rowOffset = rowNum % ROWS_PER_RAGE;
@@ -72,7 +72,7 @@ char * RowSlot(SqlTable* table, size_t rowNum)
 
 void printRow(const Row & row)
 {
-	std::cout << row.id;
-	std::cout << row.userName;
+	std::cout << row.id << " ";
+	std::cout << row.userName << " ";
 	std::cout << row.email << std::endl;
 }
