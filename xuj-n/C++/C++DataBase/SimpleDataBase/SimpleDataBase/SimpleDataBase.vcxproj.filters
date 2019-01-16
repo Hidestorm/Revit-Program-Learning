@@ -13,10 +13,19 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="SqlTable">
+      <UniqueIdentifier>{59c9c66d-2f6d-4f20-8510-db516d767320}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SqlTable\SqlTable.cpp">
+      <Filter>SqlTable</Filter>
+    </ClCompile>
+    <ClCompile Include="SqlTable\Parser.cpp">
+      <Filter>SqlTable</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -25,6 +34,12 @@
     </ClInclude>
     <ClInclude Include="RowStruct.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SqlTable\SqlTable.h">
+      <Filter>SqlTable</Filter>
+    </ClInclude>
+    <ClInclude Include="SqlTable\Parser.h">
+      <Filter>SqlTable</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

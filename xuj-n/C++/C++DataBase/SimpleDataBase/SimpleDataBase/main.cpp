@@ -1,13 +1,15 @@
 #include <iostream>
 #include <string>
 #include "SqlCore.h"
+#include "Parser.h"
 
 using namespace std;
 
 
 int main(int argc, char* argv[])
 {
-	SqlTable *table = new SqlTable;
+	mySql::SqlTable *table = new mySql::SqlTable;
+	Parser *parser = new Parser(table);
 
 	string inputStr;
 	while (true)
@@ -17,41 +19,44 @@ int main(int argc, char* argv[])
 	
 		getline(cin, inputStr);
 
-		if (!inputStr.empty() && inputStr[0] == '.')
-		{
-			switch (doMetaCommand(inputStr))
-			{
-			case(META_COMMAND_SUCESS):
-				continue;
-			case(META_COMMAND_UNRECOGNIZED_COMMAND):
-				cout << "Unrecognize command " + inputStr << endl;
-				continue;
-			}
-		}
+		cout << parser->ExcuteCmd(inputStr) << endl;
+		inputStr.clear();
 
-		Statement statement;
+		//if (!inputStr.empty() && inputStr[0] == '.')
+		//{
+		//	switch (doMetaCommand(inputStr))
+		//	{
+		//	case(META_COMMAND_SUCESS):
+		//		continue;
+		//	case(META_COMMAND_UNRECOGNIZED_COMMAND):
+		//		cout << "Unrecognize command " + inputStr << endl;
+		//		continue;
+		//	}
+		//}
 
-		switch(prepareStatement(inputStr, statement))
-		{
-		case(PREPARE_SUCCESS):
-			break;
-		case(PREPARE_SYNTAX_ERROR):
-			cout << "Syntax error. Could not parse statement." << endl;
-			continue;
-		case(PREPARE_UNRECOGNIZEED_STATEMENT):
-			cout << "Unrecognize keyword at start of " + inputStr << endl;
-			continue;
-		}
+		//Statement statement;
 
-		switch (ExcuteStatement(&statement, table))
-		{
-		case(EXECUTE_SUCCESS):
-			cout << "Executed." << endl;
-			break;
-		case(EXECUTE_TABLE_FULL):
-			cout << "Error: Table full." << endl;
-			break;
-		}
+		//switch(prepareStatement(inputStr, statement))
+		//{
+		//case(PREPARE_SUCCESS):
+		//	break;
+		//case(PREPARE_SYNTAX_ERROR):
+		//	cout << "Syntax error. Could not parse statement." << endl;
+		//	continue;
+		//case(PREPARE_UNRECOGNIZEED_STATEMENT):
+		//	cout << "Unrecognize keyword at start of " + inputStr << endl;
+		//	continue;
+		//}
+
+		//switch (ExcuteStatement(&statement, table))
+		//{
+		//case(EXECUTE_SUCCESS):
+		//	cout << "Executed." << endl;
+		//	break;
+		//case(EXECUTE_TABLE_FULL):
+		//	cout << "Error: Table full." << endl;
+		//	break;
+		//}
 
 	}
 	delete table;
