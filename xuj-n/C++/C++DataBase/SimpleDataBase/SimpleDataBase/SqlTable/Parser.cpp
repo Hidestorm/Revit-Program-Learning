@@ -48,6 +48,8 @@ MetaCommondResult Parser::ExcuteMetaCmd()
 {
 	if (m_Cmd.compare(".exit") == 0)
 	{
+		m_table->~SqlTable();
+		//delete m_table;
 		exit(EXIT_SUCCESS);
 	}
 	else

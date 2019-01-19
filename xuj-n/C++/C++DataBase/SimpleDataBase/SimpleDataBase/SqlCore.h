@@ -28,11 +28,7 @@ enum ExecuteResult
 	EXECUTE_SUCCESS
 };
 
-struct Statement
-{
-	StatementType type;
-	Row rowToInsert;
-};
+
 //
 //MetaCommondResult doMetaCommand(const std::string& str)
 //{

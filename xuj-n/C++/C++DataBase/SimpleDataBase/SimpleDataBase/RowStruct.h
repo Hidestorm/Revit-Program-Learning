@@ -1,14 +1,5 @@
 #pragma once
 #include "stdint.h"
-const size_t COLUMN_USERNAME_SIZE = 32;
-const size_t COLUMN_EMAIL_SIZE = 255;
-
-struct Row
-{
-	size_t id;
-	char userName[COLUMN_USERNAME_SIZE];
-	char email[COLUMN_EMAIL_SIZE];
-};
 
 
 

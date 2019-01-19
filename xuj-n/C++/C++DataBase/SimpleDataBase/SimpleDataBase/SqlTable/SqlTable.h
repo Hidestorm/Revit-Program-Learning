@@ -7,17 +7,23 @@
 //const size_t COLUMN_EMAIL_SIZE = 255;
 
 #define size_of_attribute(Struct, Attribute) sizeof(((Struct*)0)->Attribute)
+const size_t COLUMN_USERNAME_SIZE = 32;
+const size_t COLUMN_EMAIL_SIZE = 255;
 
+struct Row
+{
+	size_t id;
+	char userName[COLUMN_USERNAME_SIZE];
+	char email[COLUMN_EMAIL_SIZE];
+};
+
+struct Statement
+{
+	StatementType type;
+	Row rowToInsert;
+};
 namespace mySql
 {
-
-	//struct Row
-	//{
-	//	size_t id;
-	//	char userName[COLUMN_USERNAME_SIZE];
-	//	char email[COLUMN_EMAIL_SIZE];
-	//};
-
 	const size_t ID_SIZE = size_of_attribute(Row, id);
 	const size_t USERNAME_SIZE = size_of_attribute(Row, userName);
 	const size_t EMAIL_SIZE = size_of_attribute(Row, email);
@@ -32,6 +38,14 @@ namespace mySql
 	const size_t ROWS_PER_RAGE = PAGE_SIZE / ROW_SIZE;
 	const size_t TABLE_MAX_ROWS = ROWS_PER_RAGE * TABLE_MAX_PAGES;
 
+	struct Pager
+	{
+		std::fstream *file_descriptor;
+		uint32_t flie_length;
+		char * pages[TABLE_MAX_PAGES];
+
+		void pager_Flush(uint32_t page_num, uint32_t size);
+	};
 
 	class SqlTable
 	{
@@ -40,10 +54,13 @@ namespace mySql
 			m_numRows = 0;
 			std::memset(pages, NULL, TABLE_MAX_PAGES);
 		};
+		~SqlTable();
 
 	public:
 		ExecuteResult ExcuteInsert(Statement * statement);
 		ExecuteResult ExcuteSelect(Statement * statement);
+
+		void db_Open(const char* fileName);
 
 	private:
 
@@ -53,9 +70,15 @@ namespace mySql
 		char * RowSlot(size_t rowNum);
 		void printRow(const Row & row);
 
+		Pager* pager_open(const char* name);
+		char * getPage(size_t pageNum);
+
+		void db_Close();
+
 	private:	
 		char *pages[TABLE_MAX_PAGES];
 		size_t m_numRows;
+		Pager *m_pager;
 
 	};
 
