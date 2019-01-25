@@ -8,7 +8,7 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-	mySql::SqlTable *table = new mySql::SqlTable;
+	SqlTable *table = new SqlTable;
 	table->db_Open("F:\\SimpleDataBase.sdb");
 	Parser *parser = new Parser(table);
 

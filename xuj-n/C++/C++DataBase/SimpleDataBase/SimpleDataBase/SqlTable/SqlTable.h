@@ -22,65 +22,73 @@ struct Statement
 	StatementType type;
 	Row rowToInsert;
 };
-namespace mySql
+
+const size_t ID_SIZE = size_of_attribute(Row, id);
+const size_t USERNAME_SIZE = size_of_attribute(Row, userName);
+const size_t EMAIL_SIZE = size_of_attribute(Row, email);
+const size_t ID_OFFSET = 0;
+const size_t USERNAME_OFFSET = ID_OFFSET + ID_SIZE;
+const size_t EMAIL_OFFSET = USERNAME_OFFSET + USERNAME_SIZE;
+const size_t ROW_SIZE = ID_SIZE + USERNAME_SIZE + EMAIL_SIZE;
+
+
+const size_t PAGE_SIZE = 4096;
+const size_t TABLE_MAX_PAGES = 100;
+const size_t ROWS_PER_RAGE = PAGE_SIZE / ROW_SIZE;
+const size_t TABLE_MAX_ROWS = ROWS_PER_RAGE * TABLE_MAX_PAGES;
+
+
+struct Pager
 {
-	const size_t ID_SIZE = size_of_attribute(Row, id);
-	const size_t USERNAME_SIZE = size_of_attribute(Row, userName);
-	const size_t EMAIL_SIZE = size_of_attribute(Row, email);
-	const size_t ID_OFFSET = 0;
-	const size_t USERNAME_OFFSET = ID_OFFSET + ID_SIZE;
-	const size_t EMAIL_OFFSET = USERNAME_OFFSET + USERNAME_SIZE;
-	const size_t ROW_SIZE = ID_SIZE + USERNAME_SIZE + EMAIL_SIZE;
+	std::fstream *file_descriptor;
+	uint32_t flie_length;
+	char * pages[TABLE_MAX_PAGES];
 
+	void pager_Flush(uint32_t page_num, uint32_t size);
+};
 
-	const size_t PAGE_SIZE = 4096;
-	const size_t TABLE_MAX_PAGES = 100;
-	const size_t ROWS_PER_RAGE = PAGE_SIZE / ROW_SIZE;
-	const size_t TABLE_MAX_ROWS = ROWS_PER_RAGE * TABLE_MAX_PAGES;
+class Cursor;
 
-	struct Pager
-	{
-		std::fstream *file_descriptor;
-		uint32_t flie_length;
-		char * pages[TABLE_MAX_PAGES];
-
-		void pager_Flush(uint32_t page_num, uint32_t size);
+class SqlTable
+{
+	friend Cursor;
+public:
+	SqlTable() {
+		m_numRows = 0;
+		std::memset(pages, NULL, TABLE_MAX_PAGES);
 	};
+	~SqlTable();
 
-	class SqlTable
-	{
-	public:
-		SqlTable() {
-			m_numRows = 0;
-			std::memset(pages, NULL, TABLE_MAX_PAGES);
-		};
-		~SqlTable();
+public:
+	ExecuteResult ExcuteInsert(Statement * statement);
+	ExecuteResult ExcuteSelect(Statement * statement);
 
-	public:
-		ExecuteResult ExcuteInsert(Statement * statement);
-		ExecuteResult ExcuteSelect(Statement * statement);
+	void db_Open(const char* fileName);
 
-		void db_Open(const char* fileName);
+	size_t GetNumRows();
 
-	private:
+	Cursor * begin();
+	Cursor * end();
 
-		void serializeRow(Row * source, char * destination);
-		void deserializeRow(char * source, Row * destination);
+private:
+	void serializeRow(Row * source, char * destination);
+	void deserializeRow(char * source, Row * destination);
 
-		char * RowSlot(size_t rowNum);
-		void printRow(const Row & row);
+	char * RowSlot(size_t rowNum);
 
-		Pager* pager_open(const char* name);
-		char * getPage(size_t pageNum);
+	void printRow(const Row & row);
 
-		void db_Close();
+	Pager* pager_open(const char* name);
+	char * getPage(size_t pageNum);
 
-	private:	
-		char *pages[TABLE_MAX_PAGES];
-		size_t m_numRows;
-		Pager *m_pager;
+	void db_Close();
 
-	};
+private:	
+	char *pages[TABLE_MAX_PAGES];
+	size_t m_numRows;
+	Pager *m_pager;
+
+};
 
 
 
@@ -104,5 +112,5 @@ namespace mySql
 
 
 	//void printRow(const Row & row);
-}
+
 

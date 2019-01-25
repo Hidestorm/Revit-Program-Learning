@@ -10,7 +10,7 @@
 class Parser
 {
 public:
-	Parser(mySql::SqlTable *table);
+	Parser(SqlTable *table);
 	~Parser();
 
 	std::string ExcuteCmd(const std::string& cmd);
@@ -26,7 +26,7 @@ private:
 	void PrePareResutParser(PrepareResult result);
 	void ExecuteResutParser(ExecuteResult result);
 private:
-	mySql::SqlTable * m_table;
+	SqlTable * m_table;
 	Statement m_Statement;
 	std::string m_Cmd;
 	std::string m_ExcuteResult;

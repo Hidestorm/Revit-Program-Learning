@@ -1,6 +1,6 @@
 #include "Parser.h"
 
-Parser::Parser(mySql::SqlTable * table)
+Parser::Parser(SqlTable * table)
 {
 	m_table = table;
 }
@@ -12,6 +12,7 @@ Parser::~Parser()
 std::string Parser::ExcuteCmd(const std::string& cmd)
 {
 	m_Cmd = cmd;
+	// 处理 META COMMAND
 	if (!m_Cmd.empty() && m_Cmd[0] == '.')
 	{
 		switch (ExcuteMetaCmd())
@@ -23,6 +24,7 @@ std::string Parser::ExcuteCmd(const std::string& cmd)
 		}
 	}
 	
+	// 解析指令，准备执行
 	switch (PrapareStateMent())
 	{
 	case(PREPARE_SUCCESS):
@@ -33,6 +35,7 @@ std::string Parser::ExcuteCmd(const std::string& cmd)
 		return "Unrecognize keyword at start of " + m_Cmd;
 	}
 
+	// 对数据库执行操作
 	switch (ExcuteStateMent())
 	{
 	case(EXECUTE_SUCCESS):
@@ -41,6 +44,7 @@ std::string Parser::ExcuteCmd(const std::string& cmd)
 		return "Error: Table full.";
 	}
 
+	return "Unknown Error";
 
 }
 

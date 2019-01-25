@@ -27,6 +27,9 @@
     <ClCompile Include="SqlTable\Parser.cpp">
       <Filter>SqlTable</Filter>
     </ClCompile>
+    <ClCompile Include="SqlTable\Cursor.cpp">
+      <Filter>SqlTable</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SqlCore.h">
@@ -39,6 +42,9 @@
       <Filter>SqlTable</Filter>
     </ClInclude>
     <ClInclude Include="SqlTable\Parser.h">
+      <Filter>SqlTable</Filter>
+    </ClInclude>
+    <ClInclude Include="SqlTable\Cursor.h">
       <Filter>SqlTable</Filter>
     </ClInclude>
   </ItemGroup>

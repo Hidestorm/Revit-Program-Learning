@@ -116,12 +116,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="SqlTable\Cursor.cpp" />
     <ClCompile Include="SqlTable\Parser.cpp" />
     <ClCompile Include="SqlTable\SqlTable.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RowStruct.h" />
     <ClInclude Include="SqlCore.h" />
+    <ClInclude Include="SqlTable\Cursor.h" />
     <ClInclude Include="SqlTable\Parser.h" />
     <ClInclude Include="SqlTable\SqlTable.h" />
   </ItemGroup>

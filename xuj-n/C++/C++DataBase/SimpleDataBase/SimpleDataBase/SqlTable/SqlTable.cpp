@@ -1,65 +1,98 @@
 #include "SqlTable.h"
 #include <fstream>
 #include <iostream>
+#include "Cursor.h"
 
 using namespace std;
-using namespace  mySql;
 
-mySql::SqlTable::~SqlTable()
+SqlTable::~SqlTable()
 {
 	db_Close();
 }
 
-ExecuteResult mySql::SqlTable::ExcuteInsert(Statement * statement)
+ExecuteResult SqlTable::ExcuteInsert(Statement * statement)
 {
+	Cursor *pCursor = end();
 	if (m_numRows >= TABLE_MAX_ROWS)
 		return EXECUTE_TABLE_FULL;
 
 	Row * row2Insert = &(statement->rowToInsert);
-	serializeRow(row2Insert, RowSlot(m_numRows));
+	serializeRow(row2Insert, pCursor->Value());
 	m_numRows++;
+	delete pCursor;
 	return EXECUTE_SUCCESS;
 }
 
-ExecuteResult mySql::SqlTable::ExcuteSelect(Statement * statement)
+ExecuteResult SqlTable::ExcuteSelect(Statement * statement)
 {
-	Row row;
-	for (int i = 0; i <m_numRows; i++)
+	Cursor * pCursor = begin();
+
+	while (!pCursor->isEnd())
 	{
-		deserializeRow(RowSlot(i), &row);
+		Row row;
+		deserializeRow(pCursor->Value(), &row);
+		pCursor->Next();
 		printRow(row);
 	}
+	delete end();
 	return EXECUTE_SUCCESS;
+
+	//Row row;
+	//for (int i = 0; i <m_numRows; i++)
+	//{
+	//	deserializeRow(RowSlot(i), &row);
+	//	printRow(row);
+	//}
+	//return EXECUTE_SUCCESS;
 }
 
-void mySql::SqlTable::db_Open(const char * fileName)
+void SqlTable::db_Open(const char * fileName)
 {
 	m_pager = pager_open(fileName);
 	m_numRows = m_pager->flie_length / ROW_SIZE;
 }
 
-void mySql::SqlTable::serializeRow(Row * source, char * destination)
+size_t SqlTable::GetNumRows()
+{
+	return m_numRows;
+}
+
+Cursor * SqlTable::begin()
+{
+	Cursor *pCursor = new Cursor;
+	pCursor->m_table = this;
+	pCursor->m_RowNum = 0;
+	pCursor->m_endTable = (m_numRows == 0);
+	return pCursor;
+}
+
+Cursor * SqlTable::end()
+{
+	Cursor *pCursor = new Cursor;
+	pCursor->m_table = this;
+	pCursor->m_RowNum = m_numRows;
+	pCursor->m_endTable = true;
+
+	return pCursor;
+}
+
+void SqlTable::serializeRow(Row * source, char * destination)
 {
 	std::memcpy(destination + ID_OFFSET, &(source->id), ID_SIZE);
 	std::memcpy(destination + USERNAME_OFFSET, &(source->userName), USERNAME_SIZE);
 	std::memcpy(destination + EMAIL_OFFSET, &(source->email), EMAIL_SIZE);
 }
 
-void mySql::SqlTable::deserializeRow(char * source, Row * destination)
+void SqlTable::deserializeRow(char * source, Row * destination)
 {
 	std::memcpy(&(destination->id), source + ID_OFFSET, ID_SIZE);
 	std::memcpy(&(destination->userName), source + USERNAME_OFFSET, USERNAME_SIZE);
 	std::memcpy(&(destination->email), source + EMAIL_OFFSET, EMAIL_SIZE);
 }
 
-char * mySql::SqlTable::RowSlot(size_t rowNum)
+char * SqlTable::RowSlot(size_t rowNum)
 {
 	size_t pageNum = rowNum / ROWS_PER_RAGE;
-	//char *page = this->pages[pageNum];
-	//if (!page)
-	//{
-	//	page = this->pages[pageNum] = new char[PAGE_SIZE];
-	//}
 	char *page = getPage(pageNum);
 	size_t rowOffset = rowNum % ROWS_PER_RAGE;
 	size_t byteOffset = rowOffset * ROW_SIZE;
@@ -67,14 +100,14 @@ char * mySql::SqlTable::RowSlot(size_t rowNum)
 	return page + byteOffset;
 }
 
-void mySql::SqlTable::printRow(const Row & row)
+void SqlTable::printRow(const Row & row)
 {
 	std::cout << row.id << " ";
 	std::cout << row.userName << " ";
 	std::cout << row.email << std::endl;
 }
 
-Pager * mySql::SqlTable::pager_open(const char * name)
+Pager * SqlTable::pager_open(const char * name)
 {
 	//ofstream creatFile(name);
 	//if (creatFile)
@@ -107,7 +140,7 @@ Pager * mySql::SqlTable::pager_open(const char * name)
 	return nullptr;
 }
 
-char * mySql::SqlTable::getPage(size_t pageNum)
+char * SqlTable::getPage(size_t pageNum)
 {
 	if (pageNum > TABLE_MAX_PAGES)
 	{
@@ -153,7 +186,7 @@ char * mySql::SqlTable::getPage(size_t pageNum)
 	return m_pager->pages[pageNum];
 }
 
-void mySql::SqlTable::db_Close()
+void SqlTable::db_Close()
 {
 	uint32_t numFullPages = m_numRows / ROWS_PER_RAGE;
 
@@ -194,7 +227,7 @@ void mySql::SqlTable::db_Close()
 	delete m_pager;
 }
 
-void mySql::Pager::pager_Flush(uint32_t page_num, uint32_t size)
+void Pager::pager_Flush(uint32_t page_num, uint32_t size)
 {
 	if (pages[page_num] == nullptr)
 	{
