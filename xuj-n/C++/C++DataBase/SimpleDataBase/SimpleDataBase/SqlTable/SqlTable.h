@@ -40,11 +40,14 @@ const size_t TABLE_MAX_ROWS = ROWS_PER_RAGE * TABLE_MAX_PAGES;
 
 struct Pager
 {
+	static Pager* openPager(const char * filename);
+
 	std::fstream *file_descriptor;
 	uint32_t flie_length;
+	uint32_t num_pages;
 	char * pages[TABLE_MAX_PAGES];
 
-	void pager_Flush(uint32_t page_num, uint32_t size);
+	void pager_Flush(uint32_t page_num/*, uint32_t size*/);
 };
 
 class Cursor;
@@ -54,7 +57,7 @@ class SqlTable
 	friend Cursor;
 public:
 	SqlTable() {
-		m_numRows = 0;
+		//m_numRows = 0;
 		std::memset(pages, NULL, TABLE_MAX_PAGES);
 	};
 	~SqlTable();
@@ -70,9 +73,14 @@ public:
 	Cursor * begin();
 	Cursor * end();
 
+	// For debug
+	void printfLeafNode();
+
 private:
 	void serializeRow(Row * source, char * destination);
 	void deserializeRow(char * source, Row * destination);
+
+	void insertLeafNode(Cursor *pCursor, uint32_t key, Row *row);
 
 	char * RowSlot(size_t rowNum);
 
@@ -85,11 +93,13 @@ private:
 
 private:	
 	char *pages[TABLE_MAX_PAGES];
-	size_t m_numRows;
+	//size_t m_numRows;
+	uint32_t m_RootPageNum;
 	Pager *m_pager;
 
 };
 
+void printfConstants();
 
 
 

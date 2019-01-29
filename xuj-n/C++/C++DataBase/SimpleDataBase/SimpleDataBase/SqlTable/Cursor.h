@@ -15,6 +15,8 @@ public:
 
 protected:
 	SqlTable * m_table;
-	uint32_t m_RowNum;
+	//uint32_t m_RowNum;
+	uint32_t m_pageNum;
+	uint32_t m_cellNum;
 	bool m_endTable;
 };

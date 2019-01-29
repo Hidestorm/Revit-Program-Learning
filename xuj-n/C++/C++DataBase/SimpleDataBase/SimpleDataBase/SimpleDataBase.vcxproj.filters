@@ -47,5 +47,8 @@
     <ClInclude Include="SqlTable\Cursor.h">
       <Filter>SqlTable</Filter>
     </ClInclude>
+    <ClInclude Include="SqlTable\TreeStruct.h">
+      <Filter>SqlTable</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

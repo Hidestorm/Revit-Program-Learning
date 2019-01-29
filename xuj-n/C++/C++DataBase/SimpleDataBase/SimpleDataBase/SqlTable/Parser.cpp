@@ -1,4 +1,5 @@
 #include "Parser.h"
+#include "TreeStruct.h"
 
 Parser::Parser(SqlTable * table)
 {
@@ -55,6 +56,17 @@ MetaCommondResult Parser::ExcuteMetaCmd()
 		m_table->~SqlTable();
 		//delete m_table;
 		exit(EXIT_SUCCESS);
+	}
+	else if (m_Cmd.compare(".constants") == 0)
+	{
+		std::cout << "Constants: " << std::endl;
+		printfConstants();
+		return META_COMMAND_SUCESS;
+	}
+	else if (m_Cmd.compare(".btree") == 0)
+	{
+		m_table->printfLeafNode();
+		return META_COMMAND_SUCESS;
 	}
 	else
 	{
