@@ -14,14 +14,26 @@ SqlTable::~SqlTable()
 ExecuteResult SqlTable::ExcuteInsert(Statement * statement)
 {
 	char * node = getPage(m_RootPageNum);
-	if ((*LEAF_NODE_NUM_CELLS(node)) >= LEAF_NODE_MAX_CELLS)
+	uint32_t numCells = *Node::GetNodeNumCells(node);
+	if (numCells >= LEAF_NODE_MAX_CELLS)
 	{
 		return EXECUTE_TABLE_FULL;
 	}
 
-	Cursor *pCursor = end();
+	//Cursor *pCursor = end();
 	Row * row2Insert = &(statement->rowToInsert);
+	uint32_t key2Insert = row2Insert->id;
+	Cursor *pCursor = find(key2Insert);
 	
+	if (pCursor->m_cellNum < numCells)
+	{
+		uint32_t key_at_index = *Node::GetNodeKey(node, pCursor->m_cellNum);
+		if (key_at_index == key2Insert)
+		{
+			return  EXECUTE_DUPLICATE_KEY;
+		}
+	}
+
 	insertLeafNode(pCursor, row2Insert->id, row2Insert);
 	delete pCursor;
 	return EXECUTE_SUCCESS;
@@ -52,7 +64,7 @@ void SqlTable::db_Open(const char * fileName)
 	if (m_pager->num_pages == 0)
 	{
 		char *root_nude = getPage(0);
-		INITIALIZE_LEAF_NODE(root_nude);
+		Node::InitializeNode(root_nude);
 	}
 }
 
@@ -69,7 +81,7 @@ Cursor * SqlTable::begin()
 	pCursor->m_cellNum = 0;
 
 	char * rootNode = getPage(m_RootPageNum);
-	uint32_t num_cells = *LEAF_NODE_NUM_CELLS(rootNode);
+	uint32_t num_cells = *Node::GetNodeNumCells(rootNode);
 	pCursor->m_endTable = (num_cells == 0);
 	return pCursor;
 }
@@ -81,10 +93,65 @@ Cursor * SqlTable::end()
 	//pCursor->m_RowNum = m_numRows;
 	pCursor->m_pageNum = m_RootPageNum;
 	char* root_node = getPage(m_RootPageNum);
-	uint32_t num_cells = *LEAF_NODE_NUM_CELLS(root_node);
+	uint32_t num_cells = *Node::GetNodeNumCells(root_node);
 	pCursor->m_cellNum = num_cells;
 	pCursor->m_endTable = true;
 
+	return pCursor;
+}
+
+Cursor * SqlTable::find(uint32_t key)
+{
+	char * rootNode = getPage(m_RootPageNum);
+	if (Node::GetNodeType(rootNode) == NODE_LEAF)
+	{
+		return FindLeafNode(m_RootPageNum, key);
+	}
+	else
+	{
+		// 未实现
+		return nullptr;
+	}
+	return nullptr;
+}
+
+/*
+Return the position of the given key.
+If the key is not present, return the position
+where it should be inserted
+*/
+
+Cursor * SqlTable::FindLeafNode(uint32_t page_num, uint32_t key)
+{
+	char * node = getPage(page_num);
+	uint32_t numCells = *Node::GetNodeNumCells(node);
+	
+	Cursor *pCursor = begin();
+
+	// Binary Search
+	uint32_t minIndex = 0;
+	uint32_t one_past_max_index = numCells;
+	while (one_past_max_index != minIndex)
+	{
+		uint32_t index = (minIndex + one_past_max_index) / 2;
+		uint32_t key_at_index = *Node::GetNodeKey(node, index);
+		if (key == key_at_index)
+		{
+			pCursor->m_cellNum = index;
+			return pCursor;
+		}
+
+		if (key < key_at_index)
+		{
+			one_past_max_index = index;
+		}
+		else
+		{
+			minIndex = index + 1;
+		}
+	}
+
+	pCursor->m_cellNum = minIndex;
 	return pCursor;
 }
 
@@ -92,11 +159,11 @@ void SqlTable::printfLeafNode()
 {
 	std::cout << "Tree:" << std::endl;
 	char* node = getPage(0);
-	uint32_t numCells = *LEAF_NODE_NUM_CELLS(node);
-	std::cout << "Leaf Size:" << numCells;
+	uint32_t numCells = *Node::GetNodeNumCells(node);
+	std::cout << "Leaf Size:" << numCells << std::endl;
 	for (uint32_t i = 0; i < numCells; i++)
 	{
-		uint32_t key = *LEAF_NODE_KEY(node, i);
+		uint32_t key = *Node::GetNodeKey(node, i);
 		std::cout << " -" << i << ":" << key << std::endl;
 	}
 }
@@ -118,7 +185,7 @@ void SqlTable::deserializeRow(char * source, Row * destination)
 void SqlTable::insertLeafNode(Cursor * pCursor, uint32_t key, Row * row)
 {
 	char *node = getPage(pCursor->m_pageNum);
-	uint32_t num_cells = *LEAF_NODE_NUM_CELLS(node);
+	uint32_t num_cells = *Node::GetNodeNumCells(node);
 	if (num_cells >= LEAF_NODE_MAX_CELLS)
 	{
 		// Node Full
@@ -131,14 +198,14 @@ void SqlTable::insertLeafNode(Cursor * pCursor, uint32_t key, Row * row)
 		for (uint32_t i = num_cells; i > pCursor->m_cellNum; i--)
 		{
 			// 后移,空出位置
-			memcpy(LEAF_NODE_CELL(node, i), LEAF_NODE_CELL(node, i - 1), LEAF_NODE_CELL_SIZE);
+			memcpy(Node::GetNodeCell(node, i), Node::GetNodeCell(node, i - 1), LEAF_NODE_CELL_SIZE);
 		}
 	}
-	char * cellsNum = LEAF_NODE_NUM_CELLS(node);
+	char * cellsNum = Node::GetNodeNumCells(node);
 	*cellsNum += 1;
-	char * pKey = (LEAF_NODE_KEY(node, pCursor->m_cellNum));
+	char * pKey = (Node::GetNodeKey(node, pCursor->m_cellNum));
 	*pKey = key;
-	serializeRow(row, LEAF_NODE_VALUE(node, pCursor->m_cellNum));
+	serializeRow(row, Node::GetNodeValue(node, pCursor->m_cellNum));
 }
 
 char * SqlTable::RowSlot(size_t rowNum)
@@ -212,8 +279,6 @@ char * SqlTable::getPage(size_t pageNum)
 
 void SqlTable::db_Close()
 {
-	//uint32_t numFullPages = m_numRows / ROWS_PER_RAGE;
-
 	for (uint32_t i = 0; i < m_pager->num_pages; i++)
 	{
 		if(m_pager->pages[i] == nullptr)
@@ -223,19 +288,6 @@ void SqlTable::db_Close()
 		free(m_pager->pages[i]);
 		m_pager->pages[i] = nullptr;
 	}
-
-	// Rows 不够一个页
-	//uint32_t numAdditionalRows = m_numRows % ROWS_PER_RAGE;
-	//if (numAdditionalRows > 0)
-	//{
-	//	uint32_t pageNum = numFullPages;
-	//	if (m_pager->pages[pageNum] != nullptr)
-	//	{
-	//		m_pager->pager_Flush(pageNum, numAdditionalRows * ROW_SIZE);
-	//		free(m_pager->pages[pageNum]);
-	//		m_pager->pages[pageNum] = nullptr;
-	//	}
-	//}
 
 	m_pager->file_descriptor->close();
 
@@ -258,6 +310,7 @@ Pager * Pager::openPager(const char * filename)
 	readFile->open(filename, ios::in | ios::out | ios::ate);
 	if (!readFile->is_open())
 	{
+		// 没有打开，重新创建文件
 		readFile->close();
 
 		ofstream creatFile(filename);

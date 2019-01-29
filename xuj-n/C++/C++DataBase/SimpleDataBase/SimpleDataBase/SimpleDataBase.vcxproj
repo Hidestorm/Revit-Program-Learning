@@ -119,6 +119,7 @@
     <ClCompile Include="SqlTable\Cursor.cpp" />
     <ClCompile Include="SqlTable\Parser.cpp" />
     <ClCompile Include="SqlTable\SqlTable.cpp" />
+    <ClCompile Include="SqlTable\TreeStruct.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RowStruct.h" />

@@ -25,7 +25,8 @@ enum StatementType
 enum ExecuteResult
 {
 	EXECUTE_TABLE_FULL,
-	EXECUTE_SUCCESS
+	EXECUTE_SUCCESS,
+	EXECUTE_DUPLICATE_KEY
 };
 
 

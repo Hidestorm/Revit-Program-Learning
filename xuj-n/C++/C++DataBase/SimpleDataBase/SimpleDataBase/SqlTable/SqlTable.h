@@ -72,6 +72,9 @@ public:
 
 	Cursor * begin();
 	Cursor * end();
+	Cursor * find(uint32_t key);
+
+	Cursor * FindLeafNode(uint32_t page_num, uint32_t key);
 
 	// For debug
 	void printfLeafNode();
@@ -81,7 +84,7 @@ private:
 	void deserializeRow(char * source, Row * destination);
 
 	void insertLeafNode(Cursor *pCursor, uint32_t key, Row *row);
-
+	
 	char * RowSlot(size_t rowNum);
 
 	void printRow(const Row & row);

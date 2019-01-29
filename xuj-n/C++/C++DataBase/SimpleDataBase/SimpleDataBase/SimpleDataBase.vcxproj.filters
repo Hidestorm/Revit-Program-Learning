@@ -30,6 +30,9 @@
     <ClCompile Include="SqlTable\Cursor.cpp">
       <Filter>SqlTable</Filter>
     </ClCompile>
+    <ClCompile Include="SqlTable\TreeStruct.cpp">
+      <Filter>SqlTable</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SqlCore.h">

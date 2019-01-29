@@ -43,6 +43,8 @@ std::string Parser::ExcuteCmd(const std::string& cmd)
 		return "Executed.";
 	case(EXECUTE_TABLE_FULL):
 		return "Error: Table full.";
+	case(EXECUTE_DUPLICATE_KEY):
+		return "Error: Duplicate key.";
 	}
 
 	return "Unknown Error";
