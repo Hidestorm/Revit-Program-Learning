@@ -67,7 +67,7 @@ MetaCommondResult Parser::ExcuteMetaCmd()
 	}
 	else if (m_Cmd.compare(".btree") == 0)
 	{
-		m_table->printfLeafNode();
+		m_table->PrintTree(0, 0);
 		return META_COMMAND_SUCESS;
 	}
 	else

@@ -9,7 +9,7 @@ using namespace std;
 int main(int argc, char* argv[])
 {
 	SqlTable *table = new SqlTable;
-	table->db_Open("F:\\SimpleDataBase.sdb");
+	table->db_Open("F:\\SimpleDataBase2.sdb");
 	Parser *parser = new Parser(table);
 
 	string inputStr;

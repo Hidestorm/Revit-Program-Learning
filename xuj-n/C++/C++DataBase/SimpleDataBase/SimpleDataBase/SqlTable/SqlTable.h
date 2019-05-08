@@ -48,6 +48,9 @@ struct Pager
 	char * pages[TABLE_MAX_PAGES];
 
 	void pager_Flush(uint32_t page_num/*, uint32_t size*/);
+
+
+	uint32_t GetUnsedPageNum();
 };
 
 class Cursor;
@@ -79,11 +82,15 @@ public:
 	// For debug
 	void printfLeafNode();
 
+	void PrintTree(uint32_t pageNum, uint32_t indentationLevel);
+
 private:
 	void serializeRow(Row * source, char * destination);
 	void deserializeRow(char * source, Row * destination);
 
 	void insertLeafNode(Cursor *pCursor, uint32_t key, Row *row);
+	void splitLeafNodeAndInsert(Cursor *pCursor, uint32_t key, Row *row);
+	void CreateNewRoot(uint32_t rightChildPageNum);
 	
 	char * RowSlot(size_t rowNum);
 
@@ -103,6 +110,10 @@ private:
 };
 
 void printfConstants();
+
+void indent(uint32_t level);
+//void PrintfTree(Pager * pager, uint32_t page_num, uint32_t indentationLevel);
+
 
 
 

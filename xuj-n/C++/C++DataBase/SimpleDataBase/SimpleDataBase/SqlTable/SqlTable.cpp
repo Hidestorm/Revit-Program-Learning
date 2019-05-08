@@ -168,6 +168,45 @@ void SqlTable::printfLeafNode()
 	}
 }
 
+void SqlTable::PrintTree(uint32_t pageNum, uint32_t indentationLevel)
+{
+	char* node = getPage(pageNum);
+	uint32_t numKeys, child;
+
+	switch (Node::GetNodeType(node))
+	{
+	case NODE_LEAF:
+	{
+		numKeys = *Node::GetNodeNumCells(node);
+		indent(numKeys);
+		std::cout << "- leaf size: " << numKeys << std::endl;
+		for (uint32_t i =0; i < numKeys; i++)
+		{
+			indent(indentationLevel + 1);
+			std::cout << "- " << uint32_t(*Node::GetNodeKey(node, i)) << std::endl;
+		}
+		break;
+	}
+	case NODE_INTERNAL:
+	{
+		numKeys = *Node::GetInternalNodeNumKeys(node);
+		indent(indentationLevel);
+		std::cout << "- internal size: " << numKeys << std::endl;
+		for (uint32_t i = 0; i < numKeys; i++)
+		{
+			child = *Node::GetInternalNodeChild(node, i);
+			PrintTree(child, indentationLevel + 1);
+
+			indent(indentationLevel);
+			std::cout << "- key " << uint32_t(*Node::GetInternalNodeKey(node, i)) << std::endl;
+		}
+		child = *Node::GetInternalNodeRightChild(node);
+		PrintTree(child, indentationLevel + 1);
+		break;
+	}
+	}
+}
+
 void SqlTable::serializeRow(Row * source, char * destination)
 {
 	std::memcpy(destination + ID_OFFSET, &(source->id), ID_SIZE);
@@ -206,6 +245,97 @@ void SqlTable::insertLeafNode(Cursor * pCursor, uint32_t key, Row * row)
 	char * pKey = (Node::GetNodeKey(node, pCursor->m_cellNum));
 	*pKey = key;
 	serializeRow(row, Node::GetNodeValue(node, pCursor->m_cellNum));
+}
+
+void SqlTable::splitLeafNodeAndInsert(Cursor * pCursor, uint32_t key, Row * row)
+{
+	/*
+	Create a new node and move half the cells over.
+	Insert the new value in one of the two nodes.
+	Update parent or create a new parent.
+	*/
+
+	char *pOldNode = getPage(pCursor->m_pageNum);
+	uint32_t newPageNum = m_pager->GetUnsedPageNum();
+	char *pNewNode = getPage(newPageNum);
+	Node::InitializeNode(pNewNode);
+
+	/*
+	All existing keys plus new key should be divided
+	evenly between old(left) and new(right) nodes.
+	Starting form the right, move each key to correct position.
+	*/
+	for (int i = LEAF_NODE_MAX_CELLS; i >=  0; i--)
+	{
+		char * destinationNode;
+		if (i >= LEAF_NODE_LEFT_SPLIT_COUNT)
+		{
+			destinationNode = pNewNode;
+		}
+		else
+		{
+			destinationNode = pOldNode;
+		}
+
+		uint32_t indexWithinNode = i % LEAF_NODE_LEFT_SPLIT_COUNT;
+		char *destination = Node::GetNodeCell(destinationNode, indexWithinNode);
+
+		if (i == pCursor->m_cellNum)
+		{
+			serializeRow(row, destination);
+		}
+		else if (i > pCursor->m_cellNum)
+		{
+			memcpy(destination, Node::GetNodeCell(pOldNode, i - 1), LEAF_NODE_CELL_SIZE);
+		}
+		else
+		{
+			memcpy(destination, Node::GetNodeCell(pOldNode, i), LEAF_NODE_CELL_SIZE);
+		}
+
+		/* Update cell count on both leaf nodes */
+		*(Node::GetNodeNumCells(pOldNode)) = LEAF_NODE_LEFT_SPLIT_COUNT;
+		*(Node::GetNodeNumCells(pNewNode)) = LEAF_NODE_RIGHT_SPLIT_COUNT;
+
+		if (Node::isNodeRoot(pOldNode))
+		{
+			return CreateNewRoot(newPageNum);
+		}
+		else
+		{
+			// Need to implement updating parent after split
+			exit(EXIT_FAILURE);
+		}
+
+	}
+}
+/*
+Handle splitting the root.
+Old root copied to new page, becomes left child.
+Addrss of right child passed in.
+Re-initialize root page to contain the new root nude.
+New root node points to two children
+*/
+void SqlTable::CreateNewRoot(uint32_t rightChildPageNum)
+{
+	char* root = getPage(m_RootPageNum);
+	char* rightChild = getPage(rightChildPageNum);
+	uint32_t leftChildPageNum = m_pager->GetUnsedPageNum();
+	char* leftChild = getPage(leftChildPageNum);
+
+	/* Left child has data copied from old root */
+	memcpy(leftChild, root, PAGE_SIZE);
+	// set No Root
+	Node::SetNodeRoot(leftChild, false);
+
+	/* Root node is a new internal node with one key and two children */
+	Node::InitializeNode(root);
+	Node::SetNodeRoot(root, true);
+	*Node::GetInternalNodeNumKeys(root) = 1;
+	*Node::GetInternalNodeChild(root, 0) = leftChildPageNum;
+	uint32_t left_child_max_key = Node::GetNodeMaxKey(leftChild);
+	*Node::GetInternalNodeKey(root, 0) = left_child_max_key;
+	*Node::GetInternalNodeRightChild(root) = rightChildPageNum;
 }
 
 char * SqlTable::RowSlot(size_t rowNum)
@@ -369,12 +499,31 @@ void Pager::pager_Flush(uint32_t page_num/*, uint32_t size*/)
 	file_descriptor->flush();
 }
 
+uint32_t Pager::GetUnsedPageNum()
+{	
+	/*
+	* Until we start recycling free pages, new pages will always
+	* go onto the end of the database file
+	*/
+	return num_pages;
+}
+
 void printfConstants()
 {
 	std::cout << "ROW_SIZE:" << ROW_SIZE << std::endl;
-	std::cout << "COMMON_NODE_HEADER_SIZE: " << COMMOND_NODE_HEADER_SIZE << std::endl;
+	std::cout << "COMMON_NODE_HEADER_SIZE: " << COMMON_NODE_HEADER_SIZE << std::endl;
 	std::cout << "LEAF_NODE_HEADER_SIZE: " << LEAF_NODE_HEADER_SIZE << std::endl;
 	std::cout << "LEAF_NODE_CELL_SIZE: " << LEAF_NODE_CELL_SIZE << std::endl;
 	std::cout << "LEAF_NODE_SPACE_FOR_CELLS: " << LEAF_NODE_SPACE_FOR_CELLS << std::endl;
 	std::cout << "LEAF_NODE_MAX_CELLS: " << LEAF_NODE_MAX_CELLS << std::endl;
 }
+
+void indent(uint32_t level)
+{
+	for (uint32_t i = 0; i < level; i++)
+	{
+		std::cout << " ";
+	}
+}
+
+
