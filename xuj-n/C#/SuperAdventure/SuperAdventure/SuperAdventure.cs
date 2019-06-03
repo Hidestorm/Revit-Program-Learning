@@ -256,8 +256,6 @@ namespace SuperAdventure
             }
             else
             {
-                //cboWeapons.Visible = true;
-                //btnUseWeapon.Visible = true;
                 cboWeapons.DataSource = weapons;
                 cboWeapons.DisplayMember = "Name";
                 cboWeapons.ValueMember = "ID";
@@ -455,6 +453,11 @@ namespace SuperAdventure
             lblHitPoints.Text = _player.CurrentHitPoints.ToString();
             UpdateInventoryListUI();
             UpdatePotionListInUI();
+        }
+
+        private void rtbMessages_TextChanged(object sender, EventArgs e)
+        {
+            rtbMessages.ScrollToCaret();
         }
     }
 }

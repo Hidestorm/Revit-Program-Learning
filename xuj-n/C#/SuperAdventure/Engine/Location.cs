@@ -35,7 +35,7 @@ namespace Engine
 
         public void AddMonster(int id, int num)
         {
-
+             MonsterLivingHere = World.MonsterByID(id);
         }
     }
 }
